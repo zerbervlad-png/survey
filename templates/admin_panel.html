@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель{% endblock %}
+{% block content %}
+    <h1>Панель администратора</h1>
+    <div class="subtitle">Управление результатами опроса</div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <!-- Кнопка выгрузки Excel -->
+        <a href="/export_excel" class="button" style="background-color: #28a745;">📥 Выгрузить в Excel</a>
+    </div>
+
+    <div style="text-align: center;">
+        <!-- Выход из админки -->
+        <a href="/admin/logout" class="button secondary">Выйти</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Опрос сотрудников{% endblock %}</title>
+    <style>
+        /* Стили в стиле Apple: чистые линии, округлые формы, мягкие тени */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #f5f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background-color: white;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 6px 12px rgba(0,0,0,0.05);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1d1c1d;
+            margin-bottom: 8px;
+            letter-spacing: -0.003em;
+        }
+        .subtitle {
+            color: #6e6d73;
+            font-size: 17px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e6e6e9;
+            padding-bottom: 20px;
+        }
+        .error {
+            color: #ff3b30;
+            margin-bottom: 15px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #0077ed;
+        }
+        .button.secondary {
+            background-color: #e6e6e9;
+            color: #1d1c1d;
+        }
+        .button.secondary:hover {
+            background-color: #d2d2d7;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border 0.2s;
+            margin-bottom: 5px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0,113,227,0.2);
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #1d1c1d;
+        }
+        .required-star {
+            color: #ff3b30;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
