@@ -7,7 +7,7 @@
     <form action="/submit_survey" method="POST">
         <div class="form-group">
             <label for="name">Выберите ФИО <span class="required-star">*</span></label>
-            <select id="name" name="name" required style="width: 100%; padding: 14px; border: 1px solid #d2d2d7; border-radius: 12px; font-size: 16px; background-color: white;">
+            <select id="name" name="name" required>
                 <option value="" disabled selected>— Выберите сотрудника —</option>
                 {% for emp in employees %}
                     <option value="{{ emp }}">{{ emp }}</option>

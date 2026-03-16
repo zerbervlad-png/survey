@@ -6,10 +6,8 @@ import os
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
-
 ADMIN_PASSWORD = 'admin123'
 
-# ---------- ЗАГРУЗКА СПИСКА СОТРУДНИКОВ ----------
 EMPLOYEES_FILE = 'employees.xlsx'
 
 def load_employees():
@@ -21,7 +19,25 @@ def load_employees():
     return ["Иванов Иван Иванович", "Петров Петр Петрович", "Сидорова Анна Сергеевна"]
 
 EMPLOYEES_LIST = load_employees()
-# -------------------------------------------------
+
+def get_survey_progress():
+    employees = load_employees()
+    responses = get_all_responses()
+    responded_names = set(responses['Name'].dropna().astype(str).str.strip().tolist())
+    total = len(employees)
+    responded_count = sum(1 for name in employees if name in responded_names)
+    not_responded_count = total - responded_count
+    percent = round((responded_count / total * 100) if total > 0 else 0, 1)
+    responded_list = [name for name in employees if name in responded_names]
+    not_responded_list = [name for name in employees if name not in responded_names]
+    return {
+        'total': total,
+        'responded_count': responded_count,
+        'not_responded_count': not_responded_count,
+        'percent': percent,
+        'responded_list': responded_list,
+        'not_responded_list': not_responded_list
+    }
 
 @app.route('/')
 def index():
@@ -52,7 +68,8 @@ def admin_login():
 def admin_panel():
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
-    return render_template('admin_panel.html')
+    progress = get_survey_progress()
+    return render_template('admin_panel.html', progress=progress)
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -71,4 +88,4 @@ def export_excel():
     return send_file(output, download_name='survey_results.xlsx', as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5004, debug=True)
