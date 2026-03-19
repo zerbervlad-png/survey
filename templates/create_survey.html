@@ -47,10 +47,21 @@
                     <option value="multiple">Множественный выбор</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="required_${questionId}" checked>
+                    Обязательный вопрос
+                </label>
+            </div>
             <div class="form-group" id="options_container_${questionId}" style="display:none;">
                 <label>Варианты ответов</label>
                 <div id="options_list_${questionId}"></div>
                 <button type="button" class="button secondary small" onclick="addOption(${questionId})">➕ Добавить вариант</button>
+            </div>
+            <div class="form-group" id="logic_container_${questionId}" style="display:none;">
+                <label>Условная логика (только для одиночного выбора)</label>
+                <div id="logic_list_${questionId}"></div>
+                <button type="button" class="button secondary small" onclick="addLogic(${questionId})">➕ Добавить условие</button>
             </div>
             <button type="button" class="button secondary small" onclick="this.parentElement.remove()">Удалить вопрос</button>
         `;
@@ -59,8 +70,15 @@
     }
 
     function toggleOptions(select, questionId) {
-        const container = document.getElementById(`options_container_${questionId}`);
-        container.style.display = (select.value === 'single' || select.value === 'multiple') ? 'block' : 'none';
+        const optionsContainer = document.getElementById(`options_container_${questionId}`);
+        const logicContainer = document.getElementById(`logic_container_${questionId}`);
+        const isChoice = (select.value === 'single' || select.value === 'multiple');
+        optionsContainer.style.display = isChoice ? 'block' : 'none';
+        if (select.value === 'single') {
+            logicContainer.style.display = 'block';
+        } else {
+            logicContainer.style.display = 'none';
+        }
     }
 
     function addOption(questionId) {
@@ -71,6 +89,20 @@
         div.style.gap = '10px';
         div.innerHTML = `
             <input type="text" name="options_${questionId}[]" placeholder="Вариант ответа" required style="flex:1;">
+            <button type="button" class="button secondary small" onclick="this.parentElement.remove()">✖</button>
+        `;
+        list.appendChild(div);
+    }
+
+    function addLogic(questionId) {
+        const list = document.getElementById(`logic_list_${questionId}`);
+        const div = document.createElement('div');
+        div.className = 'flex';
+        div.style.marginBottom = '10px';
+        div.style.gap = '10px';
+        div.innerHTML = `
+            <input type="text" name="logic_value_${questionId}[]" placeholder="Ответ" style="flex:2;" required>
+            <input type="number" name="logic_target_${questionId}[]" placeholder="ID следующего вопроса" style="flex:1;" required>
             <button type="button" class="button secondary small" onclick="this.parentElement.remove()">✖</button>
         `;
         list.appendChild(div);

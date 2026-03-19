@@ -34,6 +34,8 @@ def init_db():
             type TEXT NOT NULL,
             options TEXT,
             "order" INTEGER DEFAULT 0,
+            logic TEXT,
+            required INTEGER DEFAULT 1,
             FOREIGN KEY (survey_id) REFERENCES surveys (id) ON DELETE CASCADE
         );
         CREATE TABLE IF NOT EXISTS responses (
@@ -52,8 +54,17 @@ def init_db():
             FOREIGN KEY (response_id) REFERENCES responses (id) ON DELETE CASCADE,
             FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS survey_starts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            survey_id INTEGER NOT NULL,
+            employee_id INTEGER NOT NULL,
+            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (survey_id) REFERENCES surveys (id) ON DELETE CASCADE,
+            FOREIGN KEY (employee_id) REFERENCES employees (id) ON DELETE CASCADE
+        );
         ''')
         conn.commit()
+    print("✅ База данных инициализирована")
 
 def create_survey(title, start_date, end_date, employee_names, questions_data):
     import json
@@ -67,10 +78,12 @@ def create_survey(title, start_date, end_date, employee_names, questions_data):
             conn.execute('INSERT INTO employees (survey_id, name) VALUES (?, ?)', (survey_id, name.strip()))
         for idx, q in enumerate(questions_data):
             options_json = json.dumps(q.get('options', [])) if q.get('options') else None
+            logic_json = json.dumps(q.get('logic', [])) if q.get('logic') else None
+            required = 1 if q.get('required', True) else 0
             conn.execute('''
-                INSERT INTO questions (survey_id, text, type, options, "order")
-                VALUES (?, ?, ?, ?, ?)
-            ''', (survey_id, q['text'], q['type'], options_json, idx))
+                INSERT INTO questions (survey_id, text, type, options, "order", logic, required)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (survey_id, q['text'], q['type'], options_json, idx, logic_json, required))
         conn.commit()
         return survey_id
 
@@ -114,6 +127,8 @@ def get_survey_details(survey_id):
         for q in questions:
             qdict = dict(q)
             qdict['options'] = json.loads(qdict['options']) if qdict['options'] else []
+            qdict['logic'] = json.loads(qdict['logic']) if qdict.get('logic') else []
+            qdict['required'] = bool(qdict['required'])
             questions_list.append(qdict)
         responses = conn.execute('''
             SELECT r.id, e.name, r.submitted_at
@@ -192,6 +207,15 @@ def save_response(survey_id, employee_name, answers_dict):
                          (response_id, int(qid), str(val) if val else None))
         conn.commit()
         return True
+
+def log_survey_start(survey_id, employee_name):
+    with get_db() as conn:
+        emp = conn.execute('SELECT id FROM employees WHERE survey_id = ? AND name = ?', (survey_id, employee_name)).fetchone()
+        if emp:
+            conn.execute('INSERT INTO survey_starts (survey_id, employee_id) VALUES (?, ?)', (survey_id, emp['id']))
+            conn.commit()
+            return True
+        return False
 
 def employee_has_responded(survey_id, employee_name):
     with get_db() as conn:

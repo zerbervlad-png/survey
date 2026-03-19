@@ -39,13 +39,14 @@
         .survey-card:hover { border-color:#0071e3; transform:scale(1.01); }
         .survey-title { font-size:20px; font-weight:600; margin-bottom:8px; }
         .survey-meta { color:#6e6d73; font-size:14px; }
-        .question-block { background:#f5f5f7; border-radius:12px; padding:20px; margin-bottom:20px; animation:slideIn 0.3s ease; }
+        .question-block { background:#f5f5f7; border-radius:12px; padding:20px; margin-bottom:20px; transition:all 0.3s ease; }
         .option-item { margin-bottom:10px; display:flex; align-items:center; gap:8px; }
         .option-item input[type=radio], .option-item input[type=checkbox] { width:auto; margin:0; }
         @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
         .hidden { display:none; }
         .fade-in { animation:fadeIn 0.5s ease; }
         @media (max-width:768px) { .stats-grid, .two-columns { flex-direction:column; } }
+        #submitBtn { width:100%; margin-top:20px; display:none; }
     </style>
 </head>
 <body>

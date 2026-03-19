@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель{% endblock %}
+{% block content %}
+    <h1>Панель администратора</h1>
+    <div class="subtitle">Управление результатами опроса</div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ progress.total }}</div>
+            <div class="stat-label">Всего сотрудников</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number green">{{ progress.responded_count }}</div>
+            <div class="stat-label">Прошли опрос</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number red">{{ progress.not_responded_count }}</div>
+            <div class="stat-label">Не прошли</div>
+        </div>
+    </div>
+
+    <div style="margin: 30px 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span>Прогресс</span>
+            <span>{{ progress.percent }}%</span>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {{ progress.percent }}%;">
+                {% if progress.percent >= 30 %}{{ progress.percent }}%{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="two-columns">
+        <div class="column">
+            <h3 class="green">✅ Прошли опрос ({{ progress.responded_count }})</h3>
+            <ul class="employee-list">
+                {% for name in progress.responded_list %}
+                    <li>{{ name }}</li>
+                {% else %}
+                    <li>Пока никто не прошёл</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="column">
+            <h3 class="red">❌ Не прошли ({{ progress.not_responded_count }})</h3>
+            <ul class="employee-list">
+                {% for name in progress.not_responded_list %}
+                    <li>{{ name }}</li>
+                {% else %}
+                    <li>Все прошли опрос</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 40px 0 20px;">
+        <a href="/export_excel" class="button" style="background-color: #28a745;">📥 Выгрузить в Excel</a>
+    </div>
+    <div style="text-align: center;">
+        <a href="/admin/logout" class="button secondary">Выйти</a>
+    </div>
+{% endblock %}

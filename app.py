@@ -1,12 +1,13 @@
 import io
 import json
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, send_file, jsonify
 import pandas as pd
 import os
 from models import (
     init_db, create_survey, get_all_surveys, get_survey_details,
-    save_response, employee_has_responded, is_survey_active, close_survey
+    save_response, employee_has_responded, is_survey_active, close_survey,
+    log_survey_start
 )
 
 app = Flask(__name__)
@@ -47,17 +48,15 @@ def submit_survey(survey_id):
         return "Вы уже проходили этот опрос", 400
 
     answers = {}
-    # Обрабатываем множественные выборы (поля с именами, оканчивающимися на [])
     for key in request.form:
         if key.startswith('q_') and key.endswith('[]'):
-            qid = key[2:-2]  # убираем 'q_' и '[]'
+            qid = key[2:-2]
             try:
                 qid = int(qid)
             except ValueError:
                 continue
             values = request.form.getlist(key)
             answers[qid] = values
-    # Обрабатываем одиночные выборы и текстовые поля
     for key, value in request.form.items():
         if key.startswith('q_') and not key.endswith('[]'):
             qid = key[2:]
@@ -69,6 +68,15 @@ def submit_survey(survey_id):
 
     save_response(survey_id, name, answers)
     return render_template('success.html')
+
+@app.route('/log_start/<int:survey_id>', methods=['POST'])
+def log_start(survey_id):
+    data = request.get_json()
+    name = data.get('name')
+    if name:
+        log_survey_start(survey_id, name)
+        return jsonify({'status': 'ok'})
+    return jsonify({'status': 'error'}), 400
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
@@ -126,10 +134,29 @@ def create_survey_route():
             if qtype in ('single', 'multiple'):
                 opts = request.form.getlist(f'options_{i}[]')
                 options = [o.strip() for o in opts if o.strip()]
+
+            logic = []
+            if qtype == 'single':
+                logic_values = request.form.getlist(f'logic_value_{i}[]')
+                logic_targets = request.form.getlist(f'logic_target_{i}[]')
+                for val, tgt in zip(logic_values, logic_targets):
+                    if val and tgt:
+                        try:
+                            logic.append({
+                                "value": val.strip(),
+                                "go_to": int(tgt)
+                            })
+                        except ValueError:
+                            pass
+
+            required = request.form.get(f'required_{i}') == 'on'
+
             questions_data.append({
                 'text': qtext,
                 'type': qtype,
-                'options': options
+                'options': options,
+                'logic': logic,
+                'required': required
             })
             i += 1
 
@@ -215,5 +242,5 @@ def admin_logout():
 
 if __name__ == '__main__':
     import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 5005
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 5006
     app.run(host='0.0.0.0', port=port, debug=True)

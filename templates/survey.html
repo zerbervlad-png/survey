@@ -5,6 +5,11 @@
     Период проведения: {{ survey.start_date }} – {{ survey.end_date }}
 </div>
 
+<!-- Прогресс-бар -->
+<div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+
 <div id="step1" class="fade-in">
     <div class="form-group">
         <label>Выберите ваше ФИО</label>
@@ -19,37 +24,79 @@
 <div id="step2" class="hidden">
     <form id="surveyForm" action="{{ url_for('submit_survey', survey_id=survey_id) }}" method="POST">
         <input type="hidden" name="name" id="selectedName">
-        {% for q in questions %}
-        <div class="question-block">
-            <h3>{{ q.text }}</h3>
-            {% if q.type == 'text' %}
-                <textarea name="q_{{ q.id }}" rows="3" required></textarea>
-            {% elif q.type == 'single' %}
-                {% for opt in q.options %}
-                <div class="option-item">
-                    <label>
-                        <input type="radio" name="q_{{ q.id }}" value="{{ opt }}" required>
-                        {{ opt }}
-                    </label>
-                </div>
-                {% endfor %}
-            {% elif q.type == 'multiple' %}
-                {% for opt in q.options %}
-                <div class="option-item">
-                    <label>
-                        <input type="checkbox" name="q_{{ q.id }}[]" value="{{ opt }}">
-                        {{ opt }}
-                    </label>
-                </div>
-                {% endfor %}
-            {% endif %}
+        <div id="questionsContainer">
+            {% for q in questions %}
+            <div class="question-block" data-qid="{{ q.id }}" data-type="{{ q.type }}" data-logic='{{ q.logic|tojson }}' style="display: none;">
+                <h3>{{ q.text }}</h3>
+                {% if q.type == 'text' %}
+                    <textarea name="q_{{ q.id }}" rows="3" {% if q.required %}required{% endif %}></textarea>
+                    <button type="button" class="button small next-btn" style="margin-top:10px;">Далее</button>
+                {% elif q.type == 'single' %}
+                    {% for opt in q.options %}
+                    <div class="option-item">
+                        <label>
+                            <input type="radio" name="q_{{ q.id }}" value="{{ opt }}" {% if q.required %}required{% endif %}>
+                            {{ opt }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                {% elif q.type == 'multiple' %}
+                    {% for opt in q.options %}
+                    <div class="option-item">
+                        <label>
+                            <input type="checkbox" name="q_{{ q.id }}[]" value="{{ opt }}">
+                            {{ opt }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                    <button type="button" class="button small next-btn" style="margin-top:10px;">Далее</button>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-        <button type="submit" class="button" style="width:100%;">Отправить</button>
+        <button type="submit" id="submitBtn" class="button" style="width:100%; display:none;">Отправить</button>
     </form>
 </div>
 
 <script>
+    const QUESTIONS_DATA = {{ questions|tojson }};
+
+    let currentQuestionIndex = 0;
+    const questions = document.querySelectorAll('.question-block');
+    const progressBar = document.getElementById('progressBar');
+
+    function showQuestion(index) {
+        questions.forEach((q, i) => {
+            q.style.display = i === index ? 'block' : 'none';
+        });
+        currentQuestionIndex = index;
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const percent = ((currentQuestionIndex + 1) / questions.length) * 100;
+        progressBar.style.width = percent + '%';
+    }
+
+    function handleAnswer(questionId, value) {
+        const question = QUESTIONS_DATA.find(q => q.id == questionId);
+        if (question && question.logic && question.logic.length > 0) {
+            const match = question.logic.find(l => l.value == value);
+            if (match) {
+                const nextIndex = QUESTIONS_DATA.findIndex(q => q.id == match.go_to);
+                if (nextIndex !== -1) {
+                    showQuestion(nextIndex);
+                    return;
+                }
+            }
+        }
+        if (currentQuestionIndex + 1 < questions.length) {
+            showQuestion(currentQuestionIndex + 1);
+        } else {
+            document.getElementById('submitBtn').style.display = 'block';
+        }
+    }
+
     document.getElementById('startSurveyBtn').addEventListener('click', function() {
         const select = document.getElementById('employeeSelect');
         const name = select.value;
@@ -57,12 +104,39 @@
             alert('Пожалуйста, выберите ФИО');
             return;
         }
+        // Логируем начало
+        fetch('{{ url_for("log_start", survey_id=survey_id) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        });
         document.getElementById('step1').classList.add('hidden');
         document.getElementById('step2').classList.remove('hidden');
         document.getElementById('selectedName').value = name;
-        setTimeout(() => {
-            document.getElementById('step2').classList.add('fade-in');
-        }, 10);
+        showQuestion(0);
+    });
+
+    document.querySelectorAll('input[type=radio]').forEach(el => {
+        el.addEventListener('change', function() {
+            const qid = this.name.replace('q_', '');
+            handleAnswer(qid, this.value);
+        });
+    });
+
+    document.querySelectorAll('.next-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const questionBlock = this.closest('.question-block');
+            const qid = questionBlock.dataset.qid;
+            const type = questionBlock.dataset.type;
+            if (type === 'text') {
+                const textarea = questionBlock.querySelector('textarea');
+                if (!textarea.value.trim()) {
+                    alert('Заполните поле');
+                    return;
+                }
+            }
+            handleAnswer(qid, null);
+        });
     });
 </script>
 
