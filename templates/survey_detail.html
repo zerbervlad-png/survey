@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex">
+    <h1>{{ details.survey.title }}</h1>
+    {% if details.is_active %}
+    <form method="POST" action="{{ url_for('close_survey_route', survey_id=details.survey.id) }}" style="display:inline;">
+        <button type="submit" class="button secondary small" onclick="return confirm('Завершить опрос досрочно?')">🔒 Завершить опрос</button>
+    </form>
+    {% else %}
+    <span class="button secondary small disabled">Опрос завершён</span>
+    {% endif %}
+</div>
+<div class="subtitle">
+    Период: {{ details.survey.start_date }} – {{ details.survey.end_date }}
+    {% if not details.is_active %}<span style="color:#ff3b30;"> (завершён администратором)</span>{% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card"><div class="stat-number">{{ details.total }}</div><div class="stat-label">Всего сотрудников</div></div>
+    <div class="stat-card"><div class="stat-number green">{{ details.responded_count }}</div><div class="stat-label">Прошли опрос</div></div>
+    <div class="stat-card"><div class="stat-number red">{{ details.not_responded_count }}</div><div class="stat-label">Не прошли</div></div>
+</div>
+
+<div style="margin:30px 0;">
+    <div style="display:flex; justify-content:space-between;"><span>Прогресс</span><span>{{ details.percent }}%</span></div>
+    <div class="progress-container"><div class="progress-bar" style="width:{{ details.percent }}%;"></div></div>
+</div>
+
+<div class="two-columns">
+    <div class="column">
+        <h3 class="green">✅ Прошли ({{ details.responded_count }})</h3>
+        <ul class="employee-list">
+            {% for r in details.responded_list %}<li><strong>{{ r.name }}</strong><br><small>{{ r.submitted_at[:16] }}</small></li>{% else %}<li>Пока никто</li>{% endfor %}
+        </ul>
+    </div>
+    <div class="column">
+        <h3 class="red">❌ Не прошли ({{ details.not_responded_count }})</h3>
+        <ul class="employee-list">
+            {% for name in details.not_responded_list %}<li>{{ name }}</li>{% else %}<li>Все прошли</li>{% endfor %}
+        </ul>
+    </div>
+</div>
+
+<h2 style="margin-top:40px;">Статистика по вопросам</h2>
+{% for stat in details.question_stats %}
+<div class="question-block">
+    <h3>{{ stat.question.text }}</h3>
+    {% if stat.type == 'text' %}
+        <ul class="employee-list">
+            {% for ans in stat.answers %}<li>{{ ans }}</li>{% else %}<li>Нет ответов</li>{% endfor %}
+        </ul>
+    {% elif stat.type == 'single' or stat.type == 'multiple' %}
+        <div style="margin-top:10px;">
+            {% for s in stat.stats %}
+            <div style="display:flex; align-items:center; margin-bottom:8px;">
+                <span style="width:200px;">{{ s.option }}</span>
+                <div style="flex:1; background:#e6e6e9; border-radius:10px; height:20px; margin:0 10px;">
+                    <div style="background:#0071e3; height:20px; border-radius:10px; width:{{ s.percent }}%;"></div>
+                </div>
+                <span style="width:80px;">{{ s.count }} ({{ s.percent }}%)</span>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+<div style="text-align:center; margin:40px 0 20px;">
+    <a href="{{ url_for('export_survey', survey_id=details.survey.id) }}" class="button" style="background-color:#28a745;">📥 Экспорт в Excel (с детализацией)</a>
+</div>
+<div style="text-align:center;"><a href="{{ url_for('admin_dashboard') }}" class="button secondary">Назад</a></div>
+{% endblock %}

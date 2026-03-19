@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Платформа проведения опросов{% endblock %}
+{% block content %}
+<h1>Платформа проведения опросов</h1>
+<div class="subtitle">Выберите опрос для участия</div>
+{% for s in surveys %}
+<div class="survey-card">
+    <div class="flex">
+        <div>
+            <span class="survey-title">{{ s.title }}</span>
+            <div class="survey-meta">
+                Действует: {{ s.start_date }} – {{ s.end_date }}
+            </div>
+        </div>
+        <a href="{{ url_for('survey_form', survey_id=s.id) }}" class="button small">Пройти</a>
+    </div>
+</div>
+{% else %}
+<p>Нет активных опросов на данный момент.</p>
+{% endfor %}
+{% endblock %}

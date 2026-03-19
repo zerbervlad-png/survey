@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Опрос недоступен</h1>
+<div class="subtitle">К сожалению, этот опрос уже завершён или ещё не начался.</div>
+<div style="text-align:center;"><a href="{{ url_for('index') }}" class="button">Вернуться к списку</a></div>
+{% endblock %}

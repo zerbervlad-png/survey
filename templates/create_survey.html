@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Создать новый опрос</h1>
+<div class="subtitle">Заполните параметры</div>
+<form method="POST" enctype="multipart/form-data" id="surveyForm">
+    <div class="form-group">
+        <label>Название опроса</label>
+        <input type="text" name="title" required placeholder="Например, Оценка Q1">
+    </div>
+    <div class="flex" style="gap:20px;">
+        <div class="form-group" style="flex:1;">
+            <label>Дата начала</label>
+            <input type="date" name="start_date" required>
+        </div>
+        <div class="form-group" style="flex:1;">
+            <label>Дата окончания</label>
+            <input type="date" name="end_date" required>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Файл со списком сотрудников (Excel, колонка 'Name')</label>
+        <input type="file" name="employee_file" accept=".xlsx" required>
+    </div>
+    <h2>Вопросы</h2>
+    <div id="questionsContainer"></div>
+    <button type="button" class="button secondary" onclick="addQuestion()" style="margin-bottom:20px;">➕ Добавить вопрос</button>
+    <button type="submit" class="button" style="width:100%;">Создать опрос</button>
+</form>
+<script>
+    let questionIndex = 0;
+    function addQuestion() {
+        const container = document.getElementById('questionsContainer');
+        const questionId = questionIndex;
+        const div = document.createElement('div');
+        div.className = 'question-block';
+        div.innerHTML = `
+            <h4>Вопрос ${questionIndex+1}</h4>
+            <div class="form-group">
+                <label>Текст вопроса</label>
+                <input type="text" name="question_text_${questionId}" required>
+            </div>
+            <div class="form-group">
+                <label>Тип ответа</label>
+                <select name="question_type_${questionId}" onchange="toggleOptions(this, ${questionId})">
+                    <option value="text">Свободный текст</option>
+                    <option value="single">Одиночный выбор</option>
+                    <option value="multiple">Множественный выбор</option>
+                </select>
+            </div>
+            <div class="form-group" id="options_container_${questionId}" style="display:none;">
+                <label>Варианты ответов</label>
+                <div id="options_list_${questionId}"></div>
+                <button type="button" class="button secondary small" onclick="addOption(${questionId})">➕ Добавить вариант</button>
+            </div>
+            <button type="button" class="button secondary small" onclick="this.parentElement.remove()">Удалить вопрос</button>
+        `;
+        container.appendChild(div);
+        questionIndex++;
+    }
+
+    function toggleOptions(select, questionId) {
+        const container = document.getElementById(`options_container_${questionId}`);
+        container.style.display = (select.value === 'single' || select.value === 'multiple') ? 'block' : 'none';
+    }
+
+    function addOption(questionId) {
+        const list = document.getElementById(`options_list_${questionId}`);
+        const div = document.createElement('div');
+        div.className = 'flex';
+        div.style.marginBottom = '10px';
+        div.style.gap = '10px';
+        div.innerHTML = `
+            <input type="text" name="options_${questionId}[]" placeholder="Вариант ответа" required style="flex:1;">
+            <button type="button" class="button secondary small" onclick="this.parentElement.remove()">✖</button>
+        `;
+        list.appendChild(div);
+    }
+</script>
+<div style="text-align:center; margin-top:20px;"><a href="{{ url_for('admin_dashboard') }}" class="button secondary">Назад</a></div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ survey.title }}</h1>
+<div class="subtitle">
+    Период проведения: {{ survey.start_date }} – {{ survey.end_date }}
+</div>
+
+<div id="step1" class="fade-in">
+    <div class="form-group">
+        <label>Выберите ваше ФИО</label>
+        <select id="employeeSelect" required>
+            <option value="" disabled selected>— Выберите сотрудника —</option>
+            {% for emp in employees %}<option value="{{ emp }}">{{ emp }}</option>{% endfor %}
+        </select>
+    </div>
+    <button id="startSurveyBtn" class="button" style="width:100%;">Начать опрос</button>
+</div>
+
+<div id="step2" class="hidden">
+    <form id="surveyForm" action="{{ url_for('submit_survey', survey_id=survey_id) }}" method="POST">
+        <input type="hidden" name="name" id="selectedName">
+        {% for q in questions %}
+        <div class="question-block">
+            <h3>{{ q.text }}</h3>
+            {% if q.type == 'text' %}
+                <textarea name="q_{{ q.id }}" rows="3" required></textarea>
+            {% elif q.type == 'single' %}
+                {% for opt in q.options %}
+                <div class="option-item">
+                    <label>
+                        <input type="radio" name="q_{{ q.id }}" value="{{ opt }}" required>
+                        {{ opt }}
+                    </label>
+                </div>
+                {% endfor %}
+            {% elif q.type == 'multiple' %}
+                {% for opt in q.options %}
+                <div class="option-item">
+                    <label>
+                        <input type="checkbox" name="q_{{ q.id }}[]" value="{{ opt }}">
+                        {{ opt }}
+                    </label>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="button" style="width:100%;">Отправить</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('startSurveyBtn').addEventListener('click', function() {
+        const select = document.getElementById('employeeSelect');
+        const name = select.value;
+        if (!name) {
+            alert('Пожалуйста, выберите ФИО');
+            return;
+        }
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('selectedName').value = name;
+        setTimeout(() => {
+            document.getElementById('step2').classList.add('fade-in');
+        }, 10);
+    });
+</script>
+
+<div style="text-align:center; margin-top:20px;">
+    <a href="{{ url_for('index') }}" class="button secondary small">Вернуться к списку</a>
+</div>
+{% endblock %}

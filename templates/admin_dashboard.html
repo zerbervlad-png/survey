@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex"><h1>Панель администратора</h1><a href="{{ url_for('create_survey_route') }}" class="button small">➕ Создать опрос</a></div>
+<div class="subtitle">Управление опросами</div>
+<h2>Все опросы</h2>
+{% for s in surveys %}
+<div class="survey-card">
+    <div class="flex">
+        <div>
+            <span class="survey-title">{{ s.title }}</span>
+            <div class="survey-meta">
+                {{ s.start_date }} – {{ s.end_date }}
+                {% if not s.is_active %}<span style="color:#ff3b30;"> (завершен)</span>{% endif %}
+            </div>
+        </div>
+        <div class="flex" style="gap:10px;">
+            <span>{{ s.responded }}/{{ s.total }} ({{ s.percent }}%)</span>
+            <a href="{{ url_for('survey_detail', survey_id=s.id) }}" class="button secondary small">Детали</a>
+        </div>
+    </div>
+    <div class="progress-container" style="margin-top:10px;">
+        <div class="progress-bar" style="width:{{ s.percent }}%;"></div>
+    </div>
+</div>
+{% else %}
+<p>Пока нет опросов.</p>
+{% endfor %}
+<div style="text-align:center; margin-top:30px;"><a href="{{ url_for('admin_logout') }}" class="button secondary">Выйти</a></div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Вход администратора</h1>
+<div class="subtitle">Введите пароль</div>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST">
+    <div class="form-group"><label>Пароль</label><input type="password" name="password" required></div>
+    <button type="submit" class="button" style="width:100%;">Войти</button>
+</form>
+{% endblock %}
