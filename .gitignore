@@ -5,5 +5,3 @@ __pycache__/
 survey.db
 *.xlsx
 *.log
-*.pid
-*.sqlite3
